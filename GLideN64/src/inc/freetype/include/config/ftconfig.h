@@ -452,7 +452,7 @@ FT_BEGIN_HEADER
   FT_MulFix_i386( FT_Int32  a,
                   FT_Int32  b )
   {
-    FT_Int32 result;
+    register FT_Int32  result;
 
     __asm
     {

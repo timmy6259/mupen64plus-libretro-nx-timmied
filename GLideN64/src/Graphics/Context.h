@@ -11,12 +11,6 @@
 
 #define GRAPHICS_CONTEXT
 
-// Fix for C++11 Support
-template<typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args&&... args) {
-    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-}
-
 struct CachedTexture;
 
 namespace graphics {
@@ -29,12 +23,9 @@ namespace graphics {
 		ShaderProgramBinary,
 		ImageTextures,
 		IntegerTextures,
-		N64DepthWithFbFetchDepth,
-		FramebufferFetchColor,
-		TextureBarrier,
-		EglImage,
-		EglImageFramebuffer,
-		DualSourceBlending
+		ClipControl,
+		FramebufferFetch,
+		TextureBarrier
 	};
 
 	enum class ClampMode {
@@ -76,8 +67,6 @@ namespace graphics {
 
 		void setBlending(BlendParam _sfactor, BlendParam _dfactor);
 
-		void setBlendingSeparate(BlendParam _sfactorcolor, BlendParam _dfactorcolor, BlendParam _sfactoralpha, BlendParam _dfactoralpha);
-
 		void setBlendColor(f32 _red, f32 _green, f32 _blue, f32 _alpha);
 
 		void clearColorBuffer(f32 _red, f32 _green, f32 _blue, f32 _alpha);
@@ -95,7 +84,6 @@ namespace graphics {
 		struct InitTextureParams {
 			ObjectHandle handle;
 			TextureUnitParam textureUnitIndex{0};
-			TextureTargetParam target = textureTarget::TEXTURE_2D;
 			u32 msaaLevel = 0;
 			u32 width = 0;
 			u32 height = 0;
@@ -152,8 +140,6 @@ namespace graphics {
 		s32 getTextureUnpackAlignment() const;
 
 		s32 getMaxTextureSize() const;
-
-		f32 getMaxAnisotropy() const;
 
 		struct BindImageTextureParameters {
 			ImageUnitParam imageUnit;
@@ -244,15 +230,11 @@ namespace graphics {
 
 		ShaderProgram * createTexrectDrawerClearShader();
 
-		ShaderProgram * createTexrectUpscaleCopyShader();
-
-		ShaderProgram * createTexrectColorAndDepthUpscaleCopyShader();
-
-		ShaderProgram * createTexrectDownscaleCopyShader();
-
-		ShaderProgram * createTexrectColorAndDepthDownscaleCopyShader();
+		ShaderProgram * createTexrectCopyShader();
 
 		ShaderProgram * createGammaCorrectionShader();
+
+		ShaderProgram * createOrientationCorrectionShader();
 
 		ShaderProgram * createFXAAShader();
 
@@ -292,7 +274,6 @@ namespace graphics {
 		f32 getMaxLineWidth();
 
 		/*---------------Misc-------------*/
-		s32 getMaxMSAALevel();
 
 		bool isError() const;
 
@@ -305,12 +286,9 @@ namespace graphics {
 		static bool ShaderProgramBinary;
 		static bool ImageTextures;
 		static bool IntegerTextures;
-		static bool FramebufferFetchDepth;
-		static bool FramebufferFetchColor;
+		static bool ClipControl;
+		static bool FramebufferFetch;
 		static bool TextureBarrier;
-		static bool EglImage;
-		static bool EglImageFramebuffer;
-		static bool DualSourceBlending;
 
 	private:
 		std::unique_ptr<ContextImpl> m_impl;

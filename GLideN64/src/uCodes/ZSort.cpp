@@ -27,6 +27,7 @@
 #define	ZH_SHQUAD	3
 #define	ZH_TXQUAD	4
 
+static
 struct ZSORTRDP
 {
 	f32 view_scale[2];
@@ -185,7 +186,7 @@ void ZSort_Obj( u32 _w0, u32 _w1 )
 
 void ZSort_Interpolate( u32, u32 )
 {
-	LOG(LOG_VERBOSE, "ZSort_Interpolate Ignored");
+	LOG(LOG_VERBOSE, "ZSort_Interpolate Ignored\n");
 }
 
 void ZSort_XFMLight( u32 _w0, u32 _w1 )
@@ -238,7 +239,7 @@ void ZSort_XFMLight( u32 _w0, u32 _w1 )
 
 void ZSort_LightingL( u32, u32 )
 {
-	LOG(LOG_VERBOSE, "ZSort_LightingL Ignored");
+	LOG(LOG_VERBOSE, "ZSort_LightingL Ignored\n");
 }
 
 
@@ -294,7 +295,7 @@ void ZSort_Lighting( u32 _w0, u32 _w1 )
 
 void ZSort_MTXRNSP( u32, u32 )
 {
-	LOG(LOG_VERBOSE, "ZSort_MTXRNSP Ignored");
+	LOG(LOG_VERBOSE, "ZSort_MTXRNSP Ignored\n");
 }
 
 void ZSort_MTXCAT(u32 _w0, u32 _w1)
@@ -391,22 +392,22 @@ void ZSort_MultMPMTX( u32 _w0, u32 _w1 )
 
 void ZSort_LinkSubDL( u32, u32 )
 {
-	LOG(LOG_VERBOSE, "ZSort_LinkSubDL Ignored");
+	LOG(LOG_VERBOSE, "ZSort_LinkSubDL Ignored\n");
 }
 
 void ZSort_SetSubDL( u32, u32 )
 {
-	LOG(LOG_VERBOSE, "ZSort_SetSubDL Ignored");
+	LOG(LOG_VERBOSE, "ZSort_SetSubDL Ignored\n");
 }
 
 void ZSort_WaitSignal( u32, u32 )
 {
-	LOG(LOG_VERBOSE, "ZSort_WaitSignal Ignored");
+	LOG(LOG_VERBOSE, "ZSort_WaitSignal Ignored\n");
 }
 
 void ZSort_SendSignal( u32, u32 )
 {
-	LOG(LOG_VERBOSE, "ZSort_SendSignal Ignored");
+	LOG(LOG_VERBOSE, "ZSort_SendSignal Ignored\n");
 }
 
 static
@@ -457,7 +458,7 @@ void ZSort_MoveMem( u32 _w0, u32 _w1 )
 	break;
 
 	case GZM_OTHERMODE:
-		LOG(LOG_VERBOSE, "MoveMem Othermode Ignored");
+		LOG(LOG_VERBOSE, "MoveMem Othermode Ignored\n");
 	break;
 
 	case GZM_VIEWPORT:   // VIEWPORT
@@ -499,7 +500,7 @@ void ZSort_MoveMem( u32 _w0, u32 _w1 )
 	break;
 
 	default:
-		LOG(LOG_ERROR, "ZSort_MoveMem UNKNOWN %d", idx);
+		LOG(LOG_ERROR, "ZSort_MoveMem UNKNOWN %d\n", idx);
 	}
 
 }

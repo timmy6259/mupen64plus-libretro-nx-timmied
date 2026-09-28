@@ -31,13 +31,15 @@ namespace graphics {
 		DatatypeParam lutType;
 		u32 lutFormatBytes;
 
-		// Used for font atlas
-		InternalColorFormatParam fontInternalFormat;
-		ColorFormatParam fontFormat;
-		DatatypeParam fontType;
-		u32 fontFormatBytes;
+		InternalColorFormatParam noiseInternalFormat;
+		ColorFormatParam noiseFormat;
+		DatatypeParam noiseType;
+		u32 noiseFormatBytes;
 
 		virtual ~FramebufferTextureFormats() {}
+
+	protected:
+		virtual void init() = 0;
 	};
 
 }

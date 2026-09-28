@@ -109,13 +109,12 @@ void RSP_CheckDLCounter()
 
 void RSP_ProcessDList()
 {
-	RSP.LLE = false;
-
 	if (ConfigOpen || dwnd().isResizeWindow()) {
 		*REG.MI_INTR |= MI_INTR_DP;
 		CheckInterrupts();
 		return;
 	}
+	tmemCacheDrop();
 
 	if (RSP.infloop) {
 		RSP.infloop = false;
@@ -139,6 +138,14 @@ void RSP_ProcessDList()
 		gSP.matrix.modelViewi = 0;
 		gSP.status[0] = gSP.status[1] = gSP.status[2] = gSP.status[3] = 0;
 		gSP.geometryMode = 0U;
+		memset(&gSP.lookat, 0, sizeof(gSPInfo::lookat));
+		gSP.lookat.xyz[0][Y] = gSP.lookat.xyz[1][X] = 1.0f;
+		memset(&gSP.lights, 0, sizeof(gSPInfo::lights));
+		gSP.ao = { 1.f, 0.625f, 0 };
+		gSP.attrOffset = { 0x0100, -0x0100 };
+		gSP.fresnel = {};
+		gSP.alphaCompareCull = {};
+		gSP.lookat.xyz[0][Y] = gSP.lookat.xyz[1][X] = 1.0f;
 		gSP.changed |= CHANGED_MATRIX | CHANGED_LIGHT | CHANGED_LOOKAT | CHANGED_GEOMETRYMODE;
 		gSP.tri_num = 0;
 		gSP.cbfd.advancedLighting = false;
@@ -225,25 +232,25 @@ void RSP_SetDefaultState()
 	gSP.matrix.modelView[0][2][2] = 1.0f;
 	gSP.matrix.modelView[0][3][3] = 1.0f;
 
-	gSP.clipRatio = 1U;
+	gSP.clipRatio = 2U;
 
 	gDP.otherMode._u64 = 0U;
 	gDP.otherMode.bi_lerp0 = gDP.otherMode.bi_lerp1 = 1;
 }
 
-u32 DepthClearColor = 0xfffcfffc;
+u32 gliden64DepthClearColor = 0xfffcfffc;
 
 static
 void setDepthClearColor()
 {
 	if (strstr(RSP.romname, (const char *)"Elmo's") != nullptr)
-		DepthClearColor = 0xFFFFFFFF;
+		gliden64DepthClearColor = 0xFFFFFFFF;
 	else if (strstr(RSP.romname, (const char *)"Taz Express") != nullptr)
-		DepthClearColor = 0xFFBCFFBC;
+		gliden64DepthClearColor = 0xFFBCFFBC;
 	else if (strstr(RSP.romname, (const char *)"NFL QBC 2000") != nullptr || strstr(RSP.romname, (const char *)"NFL Quarterback Club") != nullptr || strstr(RSP.romname, (const char *)"Jeremy McGrath Super") != nullptr)
-		DepthClearColor = 0xFFFDFFFC;
+		gliden64DepthClearColor = 0xFFFDFFFC;
 	else
-		DepthClearColor = 0xFFFCFFFC;
+		gliden64DepthClearColor = 0xFFFCFFFC;
 }
 
 void RSP_Init()
@@ -298,13 +305,16 @@ void RSP_Init()
 	else if (strstr(RSP.romname, (const char *)"VIGILANTE 8") != nullptr)
 		config.generalEmulation.hacks |= hack_noDepthFrameBuffers;
 	else if (strstr(RSP.romname, (const char *)"CONKER BFD") != nullptr)
-		config.generalEmulation.hacks |= hack_blurPauseScreen | hack_rectDepthBufferCopyCBFD | hack_fbTextureOffset;
+		config.generalEmulation.hacks |= hack_blurPauseScreen | hack_rectDepthBufferCopyCBFD;
 	else if (strstr(RSP.romname, (const char *)"MICKEY USA") != nullptr)
 		config.generalEmulation.hacks |= hack_blurPauseScreen;
 	else if (strstr(RSP.romname, (const char *)"GOLDENEYE") != nullptr)
 		config.generalEmulation.hacks |= hack_clearAloneDepthBuffer;
 	else if (strstr(RSP.romname, (const char *)"STARCRAFT 64") != nullptr)
 		config.generalEmulation.hacks |= hack_StarCraftBackgrounds;
+	else if (strstr(RSP.romname, (const char *)"POKEMON STADIUM 2") != nullptr ||
+			 strstr(RSP.romname, (const char *)"Bottom of the 9th") != nullptr)
+		config.generalEmulation.hacks |= hack_texrect_shade_alpha;
 	else if (strstr(RSP.romname, (const char *)"THE LEGEND OF ZELDA") != nullptr ||
 			 strstr(RSP.romname, (const char *)"ZELDA MASTER QUEST") != nullptr)
 		config.generalEmulation.hacks |= hack_subscreen | hack_ZeldaMonochrome;
@@ -345,14 +355,6 @@ void RSP_Init()
 		config.generalEmulation.hacks |= hack_TonyHawk;
 	else if (strstr(RSP.romname, (const char *)"NITRO64") != nullptr)
 		config.generalEmulation.hacks |= hack_WCWNitro;
-	else if (strstr(RSP.romname, (const char *)"MarioTennis") != nullptr)
-		config.generalEmulation.hacks |= hack_fbTextureOffset;
-	else if (strstr(RSP.romname, (const char *)"Extreme G 2") != nullptr ||
-		strstr(RSP.romname, (const char *)"\xb4\xb8\xbd\xc4\xd8\xb0\xd1\x47\x32") != nullptr)
-		config.generalEmulation.hacks |= hack_noDepthFrameBuffers;
-	else if (strstr(RSP.romname, (const char *)"PAPER MARIO") ||
-		strstr(RSP.romname, (const char *)"MARIO STORY"))
-		config.generalEmulation.hacks |= hack_paper_mario_subscreen;
 
 	api().FindPluginPath(RSP.pluginpath);
 

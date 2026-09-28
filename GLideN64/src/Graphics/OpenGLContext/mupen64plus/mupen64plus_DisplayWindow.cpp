@@ -3,7 +3,6 @@
 #include <Graphics/Context.h>
 #include <Graphics/OpenGLContext/GLFunctions.h>
 #include <Graphics/OpenGLContext/opengl_Utils.h>
-#include <Graphics/OpenGLContext/ThreadedOpenGl/opengl_Wrapper.h>
 #include <mupenplus/GLideN64_mupenplus.h>
 #include <GLideN64.h>
 #include <Config.h>
@@ -15,17 +14,11 @@
 #include <DisplayWindow.h>
 
 #include <libretro_private.h>
-#include <mupen64plus-next_common.h>
+// #include <mupen64plus-next_common.h>
 using namespace opengl;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-uint32_t get_retro_screen_width();
-uint32_t get_retro_screen_height();
-#include <main/netplay.h>
-#ifdef __cplusplus
-}
+#ifdef __LIBRETRO__
+#include "glsm/glsm.h"
 #endif
 
 class DisplayWindowMupen64plus : public DisplayWindow
@@ -39,7 +32,6 @@ private:
 
 	bool _start() override;
 	void _stop() override;
-	void _restart() override;
 	void _swapBuffers() override;
 	void _saveScreenshot() override;
 	void _saveBufferContent(graphics::ObjectHandle _fbo, CachedTexture *_pTexture) override;
@@ -64,17 +56,23 @@ void DisplayWindowMupen64plus::_setAttributes()
 	LOG(LOG_VERBOSE, "[GlideN64]: _setAttributes");
 }
 
+extern uint32_t screen_width;
+extern uint32_t screen_height;
 bool DisplayWindowMupen64plus::_start()
 {
-	FunctionWrapper::setThreadedMode(EnableThreadedRenderer);
-	
+	// CoreVideo_Init();
+
 	_setAttributes();
 
 	m_bFullscreen = false;
-	m_screenWidth = get_retro_screen_width();
-	m_screenHeight = get_retro_screen_height();
+	m_screenWidth = screen_width;
+	m_screenHeight = screen_height;
 	_getDisplaySize();
 	_setBufferSize();
+
+#ifdef __LIBRETRO__
+	// glsm_ctl(GLSM_CTL_STATE_CONTEXT_RESET, NULL);
+#endif
 
 #ifdef EGL
 	eglInitialize(eglGetDisplay(EGL_DEFAULT_DISPLAY), nullptr, nullptr);
@@ -86,23 +84,20 @@ bool DisplayWindowMupen64plus::_start()
 
 void DisplayWindowMupen64plus::_stop()
 {
-    FunctionWrapper::CoreVideo_Quit();
-}
-
-void DisplayWindowMupen64plus::_restart()
-{
-#ifdef M64P_GLIDENUI
-	m_resizeWidth = 0;
-	m_resizeHeight = 0;
-#endif // M64P_GLIDENUI
+	// CoreVideo_Quit();
 }
 
 void DisplayWindowMupen64plus::_swapBuffers()
 {
 	//Don't let the command queue grow too big buy waiting on no more swap buffers being queued
-	if(!netplay_lag())
-		FunctionWrapper::WaitForSwapBuffersQueued();
-	FunctionWrapper::CoreVideo_GL_SwapBuffers();
+//	if(!netplay_lag())
+//		FunctionWrapper::WaitForSwapBuffersQueued();
+	// CoreVideo_GL_SwapBuffers();
+
+	if (renderCallback)
+		(*renderCallback)();
+
+    retro_return(true);
 }
 
 void DisplayWindowMupen64plus::_saveScreenshot()
@@ -119,7 +114,6 @@ bool DisplayWindowMupen64plus::_resizeWindow()
 	m_bFullscreen = true;
 	m_width = m_screenWidth = m_resizeWidth;
 	m_height = m_screenHeight = m_resizeHeight;
-	_setBufferSize();
 	opengl::Utils::isGLError(); // reset GL error.
 
 	return true;
@@ -170,6 +164,11 @@ void DisplayWindowMupen64plus::_readScreen2(void * _dest, int * _width, int * _h
 	if (_dest == nullptr)
 		return;
 
+	u8 *pBufferData = (u8*)malloc((*_width)*(*_height) * 4);
+	if (pBufferData == nullptr)
+		return;
+	u8 *pDest = (u8*)_dest;
+
 #if !defined(OS_ANDROID) && !defined(OS_IOS)
 	GLint oldMode;
 	glGetIntegerv(GL_READ_BUFFER, &oldMode);
@@ -177,14 +176,11 @@ void DisplayWindowMupen64plus::_readScreen2(void * _dest, int * _width, int * _h
 		glReadBuffer(GL_FRONT);
 	else
 		glReadBuffer(GL_BACK);
-	glReadPixels(0, m_heightOffset, m_screenWidth, m_screenHeight, GL_RGB, GL_UNSIGNED_BYTE, _dest);
+	glReadPixels(0, m_heightOffset, m_screenWidth, m_screenHeight, GL_RGBA, GL_UNSIGNED_BYTE, pBufferData);
 	glReadBuffer(oldMode);
 #else
-	u8 *pBufferData = (u8*)malloc((*_width)*(*_height) * 4);
-	if (pBufferData == nullptr)
-		return;
-	u8 *pDest = (u8*)_dest;
 	glReadPixels(0, m_heightOffset, m_screenWidth, m_screenHeight, GL_RGBA, GL_UNSIGNED_BYTE, pBufferData);
+#endif
 
 	//Convert RGBA to RGB
 	for (s32 y = 0; y < *_height; ++y) {
@@ -199,7 +195,6 @@ void DisplayWindowMupen64plus::_readScreen2(void * _dest, int * _width, int * _h
 	}
 
 	free(pBufferData);
-#endif
 }
 
 graphics::ObjectHandle DisplayWindowMupen64plus::_getDefaultFramebuffer()

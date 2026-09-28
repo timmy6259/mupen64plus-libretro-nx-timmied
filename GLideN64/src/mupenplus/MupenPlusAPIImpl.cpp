@@ -4,9 +4,11 @@
 #include "../Config.h"
 #include <DisplayWindow.h>
 
-void(*renderCallback)(int) = nullptr;
+static char pluginNameWithRevision[] = "GLideN64 rev.LINK";
 
-m64p_error PluginAPI::PluginStartup(m64p_dynlib_handle _CoreLibHandle, void* Context, void (*DebugCallback)(void *, int, const char *))
+void(*renderCallback)() = nullptr;
+
+m64p_error PluginAPI::PluginStartup(m64p_dynlib_handle _CoreLibHandle)
 {
 	return M64ERR_SUCCESS;
 }
@@ -50,7 +52,7 @@ m64p_error PluginAPI::PluginGetVersion(
 	return M64ERR_SUCCESS;
 }
 
-void PluginAPI::SetRenderingCallback(void (*callback)(int))
+void PluginAPI::SetRenderingCallback(void (*callback)())
 {
 	renderCallback = callback;
 }

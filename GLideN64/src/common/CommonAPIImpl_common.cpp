@@ -18,7 +18,8 @@
 #include <Log.h>
 #include "Graphics/Context.h"
 #include <DisplayWindow.h>
-#include <osal_keys.h>
+
+extern "C" void Config_LoadConfig();
 
 PluginAPI & PluginAPI::get()
 {
@@ -153,7 +154,7 @@ private:
 
 void PluginAPI::ProcessDList()
 {
-	LOG(LOG_APIFUNC, "ProcessDList");
+	LOG(LOG_APIFUNC, "ProcessDList\n");
 #ifdef RSPTHREAD
 	_callAPICommand(ProcessDListCommand());
 #else
@@ -163,7 +164,7 @@ void PluginAPI::ProcessDList()
 
 void PluginAPI::ProcessRDPList()
 {
-	LOG(LOG_APIFUNC, "ProcessRDPList");
+	LOG(LOG_APIFUNC, "ProcessRDPList\n");
 #ifdef RSPTHREAD
 	_callAPICommand(ProcessRDPListCommand());
 #else
@@ -173,12 +174,8 @@ void PluginAPI::ProcessRDPList()
 
 void PluginAPI::RomClosed()
 {
-	if (!m_bRomOpen)
-		return;
-
+	LOG(LOG_APIFUNC, "RomClosed\n");
 	m_bRomOpen = false;
-
-	LOG(LOG_APIFUNC, "RomClosed");
 #ifdef RSPTHREAD
 	_callAPICommand(RomClosedCommand(
 					&m_rspThreadMtx,
@@ -193,14 +190,11 @@ void PluginAPI::RomClosed()
 	dwnd().stop();
 	GBI.destroy();
 #endif
-	//osal_keys_quit();
 }
 
-int PluginAPI::RomOpen()
+void PluginAPI::RomOpen()
 {
-	//osal_keys_init();
-
-	LOG(LOG_APIFUNC, "RomOpen");
+	LOG(LOG_APIFUNC, "RomOpen\n");
 #ifdef RSPTHREAD
 	m_pluginThreadMtx.lock();
 	m_pRspThread = new std::thread(RSP_ThreadProc, &m_rspThreadMtx, &m_pluginThreadMtx, &m_rspThreadCv, &m_pluginThreadCv, &m_pCommand);
@@ -211,13 +205,9 @@ int PluginAPI::RomOpen()
 	RSP_Init();
 	GBI.init();
 	Config_LoadConfig();
-	if (!dwnd().start())
-		return 0;
+	dwnd().start();
 #endif
-
 	m_bRomOpen = true;
-
-	return 1;
 }
 
 void PluginAPI::ShowCFB()
@@ -227,7 +217,7 @@ void PluginAPI::ShowCFB()
 
 void PluginAPI::UpdateScreen()
 {
-	LOG(LOG_APIFUNC, "UpdateScreen");
+	LOG(LOG_APIFUNC, "UpdateScreen\n");
 #ifdef RSPTHREAD
 	_callAPICommand(ProcessUpdateScreenCommand());
 #else
@@ -273,7 +263,7 @@ void PluginAPI::_initiateGFX(const GFX_INFO & _gfxInfo) const {
 
 void PluginAPI::ChangeWindow()
 {
-	LOG(LOG_APIFUNC, "ChangeWindow");
+	LOG(LOG_APIFUNC, "ChangeWindow\n");
 	dwnd().setToggleFullscreen();
 	if (!m_bRomOpen)
 		dwnd().closeWindow();

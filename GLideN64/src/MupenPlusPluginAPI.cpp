@@ -2,24 +2,18 @@
 #include "Types.h"
 #include "mupenplus/GLideN64_mupenplus.h"
 #include "N64.h"
-#include <cstddef>
-
-// Defined in mupen64plus-core main.c
-extern size_t rdram_size;
 
 extern "C" {
 
-EXPORT int CALL gln64RomOpen(void)
+EXPORT int CALL gliden64RomOpen(void)
 {
-	if (rdram_size != 0)
-		RDRAMSize = rdram_size - 1;
-	else
-		RDRAMSize = 0;
-
-	return api().RomOpen();
+	// wtf gliden64
+	RDRAMSize = 8 * 1024 * 1024 - 1;
+	api().RomOpen();
+	return 1;
 }
 
-EXPORT m64p_error CALL gln64PluginGetVersion(
+EXPORT m64p_error CALL gliden64PluginGetVersion(
 	m64p_plugin_type * _PluginType,
 	int * _PluginVersion,
 	int * _APIVersion,
@@ -30,31 +24,31 @@ EXPORT m64p_error CALL gln64PluginGetVersion(
 	return api().PluginGetVersion(_PluginType, _PluginVersion, _APIVersion, _PluginNamePtr, _Capabilities);
 }
 
-EXPORT m64p_error CALL gln64PluginStartup(
+EXPORT m64p_error CALL gliden64PluginStartup(
 	m64p_dynlib_handle CoreLibHandle,
 	void *Context,
 	void (*DebugCallback)(void *, int, const char *)
 )
 {
-	return api().PluginStartup(CoreLibHandle, Context, DebugCallback);
+	return api().PluginStartup(CoreLibHandle);
 }
 
-EXPORT m64p_error CALL gln64PluginShutdown(void)
+EXPORT m64p_error CALL gliden64PluginShutdown(void)
 {
 	return api().PluginShutdown();
 }
 
-EXPORT void CALL gln64ReadScreen2(void *dest, int *width, int *height, int front)
+EXPORT void CALL gliden64ReadScreen2(void *dest, int *width, int *height, int front)
 {
 	api().ReadScreen2(dest, width, height, front);
 }
 
-EXPORT void CALL gln64SetRenderingCallback(void (*callback)(int))
+EXPORT void CALL gliden64SetRenderingCallback(void (*callback)())
 {
 	api().SetRenderingCallback(callback);
 }
 
-EXPORT void CALL gln64ResizeVideoOutput(int width, int height)
+EXPORT void CALL gliden64ResizeVideoOutput(int width, int height)
 {
 	api().ResizeVideoOutput(width, height);
 }

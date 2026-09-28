@@ -1,48 +1,19 @@
 #ifndef __LOG_H__
 #define __LOG_H__
 
-#define LOG_NONE	0
-#define LOG_ERROR   1
-#define LOG_MINIMAL	2
-#define LOG_WARNING 3
-#define LOG_VERBOSE 4
-#define LOG_APIFUNC 5
-
-#define LOG_LEVEL LOG_NONE
-
+#include <libretro.h>
 #include "Types.h"
-#include <cstdio>
-#include <string>
 
-#if LOG_LEVEL > 0
+#define LOG_ERROR   RETRO_LOG_ERROR
+#define LOG_MINIMAL	RETRO_LOG_WARN
+#define LOG_WARNING RETRO_LOG_WARN
+#define LOG_VERBOSE RETRO_LOG_INFO
+#define LOG_APIFUNC RETRO_LOG_DEBUG
 
-#include "Types.h"
-#include <cstdio>
-#include <string>
+extern "C" {
+	extern retro_log_printf_t log_cb;
+}
 
-// for strrchr
-#include <string.h>
-
-#ifdef OS_WINDOWS
-#define __FILENAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
-#else
-#define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
-#endif //OS_WINDOWS
-
-#define LOG(...) LogDebug(__FILENAME__, __LINE__, __VA_ARGS__)
-
-void LogDebug(const char* _fileName, int _line, u16 _type, const char* _format, ...);
-
-#else
-
-#define LOG(A, ...)
-
-#endif
-
-#if defined(OS_WINDOWS) && !defined(MINGW)
-void debugPrint(const char * format, ...);
-#else
-#define debugPrint(A, ...)
-#endif
+#define LOG(...) if (log_cb) log_cb( __VA_ARGS__ )
 
 #endif

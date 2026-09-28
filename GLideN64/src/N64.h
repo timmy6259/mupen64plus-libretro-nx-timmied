@@ -38,17 +38,40 @@ struct N64Regs
 
 extern N64Regs REG;
 extern u8 *HEADER;
-
-extern "C" {
-	// See comment in N64.cpp
-	extern u8 *DMEM;
-	extern u8 *IMEM;
-}
-
+extern u8 *DMEM;
+extern u8 *IMEM;
 extern u8 *RDRAM;
 extern u64 TMEM[512];
 extern u32 RDRAMSize;
 extern bool ConfigOpen;
+
+struct TMEMCacheHashEntry
+{
+	u32 off;
+	u32 size;
+	u32 hash;
+};
+extern TMEMCacheHashEntry TMEMCacheHash;
+
+static inline void tmemCacheHashInvalidate()
+{
+	TMEMCacheHash.off = -1;
+}
+
+static inline void tmemCacheHashSet(u32 off, u32 size, u32 hash)
+{
+	TMEMCacheHash.off = off;
+	TMEMCacheHash.size = size;
+	TMEMCacheHash.hash = hash;
+}
+
+static inline const u32* tmemCacheHashTryGet(u32 off, u32 size)
+{
+	if (TMEMCacheHash.off == off && TMEMCacheHash.size == size)
+		return &TMEMCacheHash.hash;
+	else
+		return nullptr;
+}
 
 #endif
 

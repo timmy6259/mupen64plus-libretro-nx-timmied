@@ -36,8 +36,7 @@
 #define S2DEX_1_03		27
 #define S2DEX_1_05		28
 #define F3DEX3			29
-#define F3DEX095		30
-#define NONE			31
+#define NONE			30
 
 // Fixed point conversion factors
 #define FIXED2FLOATRECIP1	0.5f
@@ -58,21 +57,21 @@
 #define FIXED2FLOATRECIP16	1.52587890625e-05f
 
 #define _FIXED2FLOAT( v, b ) \
-	(static_cast<f32>(v) * FIXED2FLOATRECIP##b)
+	((f32)v * FIXED2FLOATRECIP##b)
 
 #define FIXED2FLOATRECIPCOLOR5	3.22580635547637939453125e-02f
 #define FIXED2FLOATRECIPCOLOR7	7.8740157186985015869140625e-03f
 #define FIXED2FLOATRECIPCOLOR8	3.9215688593685626983642578125e-03f
 
 #define _FIXED2FLOATCOLOR( v, b ) \
-	(static_cast<f32>(v) * FIXED2FLOATRECIPCOLOR##b)
+	((f32)v * FIXED2FLOATRECIPCOLOR##b)
 
 
 // Useful macros for decoding GBI command's parameters
 #define _SHIFTL( v, s, w )	\
-	((static_cast<u32>(v) & ((0x01 << w) - 1)) << s)
+	(((u32)v & ((0x01 << w) - 1)) << s)
 #define _SHIFTR( v, s, w )	\
-	((static_cast<u32>(v) >> s) & ((0x01 << w) - 1))
+	(((u32)v >> s) & ((0x01 << w) - 1))
 
 // These are all the constant flags
 #define G_ZBUFFER				0x00000001
@@ -84,6 +83,14 @@
 #define G_TEXTURE_GEN_LINEAR	0x00080000
 #define G_LOD					0x00100000
 #define G_POINT_LIGHTING		0x00400000
+
+// Note that when F3DEX3 is enabled, AMBOCCLUSION or ATTROFFSET_ST will intersect with ACCLAIM lighting.
+// Condition to check for ACCLAIM then is ensuring that both AMBOCCLUSION and ATTROFFSET_ST are equal to 0.
+#define F3DEX3_G_PACKED_NORMALS        0x00000800
+#define F3DEX3_G_LIGHTTOALPHA          0x00001000
+#define F3DEX3_G_LIGHTING_SPECULAR     0x00002000
+#define F3DEX3_G_FRESNEL_COLOR         0x00004000
+#define F3DEX3_G_FRESNEL_ALPHA         0x00008000
 
 #define G_MV_MMTX		2
 #define G_MV_PMTX		6
@@ -191,6 +198,9 @@ extern u32 G_CULL_FRONT;
 extern u32 G_CULL_BACK;
 extern u32 G_CULL_BOTH;
 extern u32 G_CLIPPING;
+
+extern u32 G_ATTROFFSET_ST_ENABLE;
+extern u32 G_AMBOCCLUSION;
 
 extern u32 G_MV_VIEWPORT;
 
@@ -498,6 +508,7 @@ struct MicrocodeInfo
 		bool legacyVertexPipeline = true;
 		bool noOcclusionPlane = false;
 		bool branchOnZ = false;
+		u8 version = 0;
 	} f3dex3;
 };
 
@@ -522,6 +533,7 @@ struct GBIInfo
 	bool isLegacyVertexPipeline() const { return m_pCurrent != nullptr ? m_pCurrent->f3dex3.legacyVertexPipeline : true; }
 	bool isNoOcclusionPlane() const { return m_pCurrent != nullptr ? m_pCurrent->f3dex3.noOcclusionPlane : false; }
 	bool isBranchOnZ() const { return m_pCurrent != nullptr ? m_pCurrent->f3dex3.branchOnZ : false; }
+	u8 f3dex3Version() const { return m_pCurrent != nullptr ? m_pCurrent->f3dex3.version : 0; }
 
 private:
 	void _flushCommands();
@@ -558,6 +570,8 @@ extern GBIInfo GBI;
 	G_CULL_BACK			= ucode##_CULL_BACK; \
 	G_CULL_BOTH			= ucode##_CULL_BOTH; \
 	G_CLIPPING			= ucode##_CLIPPING; \
+	G_ATTROFFSET_ST_ENABLE = 0; \
+	G_AMBOCCLUSION		= 0; \
 \
 	G_MV_VIEWPORT		= ucode##_MV_VIEWPORT; \
 \

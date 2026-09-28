@@ -8,6 +8,7 @@
 
 #ifndef GL_EXT_texture_filter_anisotropic
 #define GL_TEXTURE_MAX_ANISOTROPY_EXT     0x84FE
+#define GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT 0x84FF
 #endif
 
 namespace opengl {
@@ -57,8 +58,8 @@ namespace opengl {
 		void init2DTexture(const graphics::Context::InitTextureParams & _params) override
 		{
 			if (_params.msaaLevel == 0) {
-				m_bind->bind(_params.textureUnitIndex, _params.target, _params.handle);
-				glTexImage2D(GLuint(_params.target),
+				m_bind->bind(_params.textureUnitIndex, graphics::textureTarget::TEXTURE_2D, _params.handle);
+				glTexImage2D(GL_TEXTURE_2D,
 							 _params.mipMapLevel,
 							 GLuint(_params.internalFormat),
 							 _params.width,
@@ -103,10 +104,10 @@ namespace opengl {
 		void init2DTexture(const graphics::Context::InitTextureParams & _params) override
 		{
 			if (_params.msaaLevel == 0) {
-				m_bind->bind(_params.textureUnitIndex, _params.target, _params.handle);
+				m_bind->bind(_params.textureUnitIndex, graphics::textureTarget::TEXTURE_2D, _params.handle);
 				if (m_handle != _params.handle) {
 					m_handle = _params.handle;
-					glTexStorage2D(GLuint(_params.target),
+					glTexStorage2D(GL_TEXTURE_2D,
 								   _params.mipMapLevels,
 								   GLenum(_params.internalFormat),
 								   _params.width,
@@ -114,7 +115,7 @@ namespace opengl {
 				}
 
 				if (_params.data != nullptr) {
-					glTexSubImage2D(GLuint(_params.target),
+					glTexSubImage2D(GL_TEXTURE_2D,
 						_params.mipMapLevel,
 						0, 0,
 						_params.width,
@@ -281,8 +282,6 @@ namespace opengl {
 				glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GLint(_parameters.minFilter));
 				(*m_texparams)[u32(_parameters.handle)].minFilter = GLint(_parameters.minFilter);
 			}
-			
-#if !defined(IOS) && !defined(EMSCRIPTEN)
 			if (_parameters.wrapS.isValid() && !(iterValid && iter->second.wrapS == GLint(_parameters.wrapS))) {
 				glTexParameteri(target, GL_TEXTURE_WRAP_S, GLint(_parameters.wrapS));
 				(*m_texparams)[u32(_parameters.handle)].wrapS = GLint(_parameters.wrapS);
@@ -291,20 +290,13 @@ namespace opengl {
 				glTexParameteri(target, GL_TEXTURE_WRAP_T, GLint(_parameters.wrapT));
 				(*m_texparams)[u32(_parameters.handle)].wrapT = GLint(_parameters.wrapT);
 			}
-#else // !IOS && !EMSCRIPTEN
-			// HACK: Emscripten & IOS only support NPOT textures for GL_CLAMP_TO_EDGE
-			glTexParameteri(target, GL_TEXTURE_WRAP_S, GLint(graphics::textureParameters::WRAP_CLAMP_TO_EDGE));
-			(*m_texparams)[u32(_parameters.handle)].wrapS = GLint(graphics::textureParameters::WRAP_CLAMP_TO_EDGE);
-			glTexParameteri(target, GL_TEXTURE_WRAP_T, GLint(graphics::textureParameters::WRAP_CLAMP_TO_EDGE));
-			(*m_texparams)[u32(_parameters.handle)].wrapT = GLint(graphics::textureParameters::WRAP_CLAMP_TO_EDGE);
-#endif // IOS || EMSCRIPTEN
 			if (m_supportMipmapLevel && _parameters.maxMipmapLevel.isValid() && !(iterValid && iter->second.maxMipmapLevel == GLint(_parameters.maxMipmapLevel))) {
 				glTexParameteri(target, GL_TEXTURE_MAX_LEVEL, GLint(_parameters.maxMipmapLevel));
 				(*m_texparams)[u32(_parameters.handle)].maxMipmapLevel = GLint(_parameters.maxMipmapLevel);
 			}
 			if (_parameters.maxAnisotropy.isValid() && !(iterValid && iter->second.maxAnisotropy == GLfloat(_parameters.maxAnisotropy))) {
-				glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, GLfloat(_parameters.maxAnisotropy));
-				(*m_texparams)[u32(_parameters.handle)].maxAnisotropy = GLfloat(_parameters.maxAnisotropy);
+				glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, GLfloat(_parameters.maxMipmapLevel));
+				(*m_texparams)[u32(_parameters.handle)].maxAnisotropy = GLfloat(_parameters.maxMipmapLevel);
 			}
 		}
 
